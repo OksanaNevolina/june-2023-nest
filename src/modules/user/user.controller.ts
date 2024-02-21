@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { CreateUserDto } from './dto/request/create-user.dto';
-import { UpdateUserDto } from './dto/request/update-user.dto';
-import { UserResponseDto } from './dto/response/user.response.dto';
-import { UserService } from './user.service';
+import { CreateUserDto } from './models/dto/request/create-user.dto';
+import { UpdateUserDto } from './models/dto/request/update-user.dto';
+import { UserResponseDto } from './models/dto/response/user.response.dto';
+import { UserService } from './services/user.service';
 
 @ApiTags('User')
 @Controller('users')

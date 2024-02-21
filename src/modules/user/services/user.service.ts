@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { CreateUserDto } from './dto/request/create-user.dto';
-import { UpdateUserDto } from './dto/request/update-user.dto';
-import { CacheCustom } from '../../common/decorators/сache-method.decorator';
+import { CacheCustom } from '../../../common/decorators/сache-method.decorator';
+import { CreateUserDto } from '../models/dto/request/create-user.dto';
+import { UpdateUserDto } from '../models/dto/request/update-user.dto';
 
 @Injectable()
 export class UserService {
   public async create(createUserDto: CreateUserDto): Promise<any> {
-    return 'This action adds a new user';
+    return `${createUserDto}`;
   }
 
   public async findAll(): Promise<string> {
@@ -23,7 +23,7 @@ export class UserService {
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<string> {
-    return `This action updates a #${id} user`;
+    return `This action updates a #${updateUserDto} user `;
   }
 
   public async remove(id: number): Promise<string> {
