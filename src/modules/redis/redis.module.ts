@@ -23,5 +23,6 @@ const redisProvider = {
   imports: [],
   controllers: [],
   providers: [redisProvider, RedisService],
+  exports: [RedisService],
 })
 export class RedisModule {}
