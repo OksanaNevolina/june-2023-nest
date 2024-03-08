@@ -32,11 +32,11 @@ export class ArticleEntity extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
-  @OneToMany(() => CommentEntity, (entity) => entity.article)
-  comments?: CommentEntity[];
-
   @OneToMany(() => LikeEntity, (entity) => entity.article)
   likes?: LikeEntity[];
+
+  @OneToMany(() => CommentEntity, (entity) => entity.article)
+  comments?: CommentEntity[];
 
   @ManyToMany(() => TagEntity, (entity) => entity.articles)
   @JoinTable()

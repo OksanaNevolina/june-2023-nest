@@ -10,17 +10,17 @@ import { RefreshTokenEntity } from './refresh-token.entity';
 
 @Entity(TableNameEnum.USERS)
 export class UserEntity extends BaseEntity {
-  @Column('text', { nullable: true })
-  name?: string;
-
   @Column('text')
+  name: string;
+
+  @Column('text', { unique: true })
   email: string;
 
   @Column('text', { select: false })
   password: string;
 
   @Column('text', { nullable: true })
-  bio: string;
+  bio?: string;
 
   @Column('text', { nullable: true })
   image?: string;
@@ -37,9 +37,9 @@ export class UserEntity extends BaseEntity {
   @OneToMany(() => CommentEntity, (entity) => entity.user)
   comments?: CommentEntity[];
 
-  @OneToMany(() => FollowEntity, (entity) => entity.followers)
-  followers?: CommentEntity[];
+  @OneToMany(() => FollowEntity, (entity) => entity.follower)
+  followers?: FollowEntity[];
 
   @OneToMany(() => FollowEntity, (entity) => entity.following)
-  followings?: CommentEntity[];
+  followings?: FollowEntity[];
 }

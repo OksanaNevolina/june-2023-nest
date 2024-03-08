@@ -1,36 +1,40 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
-  Logger,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
 import { ArticleEntity } from '../../../database/entities/article.entity';
 import { IUserData } from '../../auth/interfaces/user-data.interface';
 import { ArticleRepository } from '../../repository/services/article.repository';
-import { UserRepository } from '../../repository/services/user.repository';
+import { LikeRepository } from '../../repository/services/like.repository';
 import { ArticleListRequestDto } from '../models/dto/request/article-list.request.dto';
 import { CreateArticleRequestDto } from '../models/dto/request/create-article.request.dto';
 import { EditArticleRequestDto } from '../models/dto/request/edit-article.request.dto';
 import { ArticleResponseDto } from '../models/dto/responce/article.response.dto';
+import { ArticleListResponseDto } from '../models/dto/responce/article-list.response.dto';
 import { ArticleMapper } from './article.mapper';
 
 @Injectable()
 export class ArticleService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly likeRepository: LikeRepository,
     private readonly articleRepository: ArticleRepository,
   ) {}
 
-  public async getList(query: ArticleListRequestDto): Promise<any> {
-    Logger.log(query);
-    const qb = this.articleRepository.createQueryBuilder('article');
-    qb.addOrderBy('article.created', 'DESC');
-    qb.take(10);
-    qb.skip(0);
-    const [entities, total] = await qb.getManyAndCount();
-    return { entities, total };
+  public async getList(
+    query: ArticleListRequestDto,
+    userData: IUserData,
+  ): Promise<ArticleListResponseDto> {
+    const [entities, total] = await this.articleRepository.getList(
+      query,
+      userData,
+    );
+
+    return ArticleMapper.toListResponseDto(entities, total, query);
   }
+
   public async create(
     dto: CreateArticleRequestDto,
     userData: IUserData,
@@ -40,11 +44,15 @@ export class ArticleService {
     );
     return ArticleMapper.toResponseDto(article);
   }
-  public async getArticleById(articleId: string): Promise<ArticleResponseDto> {
-    const article = await this.articleRepository.findOne({
-      where: { id: articleId },
-      relations: { user: true },
-    });
+
+  public async getArticleById(
+    articleId: string,
+    userData: IUserData,
+  ): Promise<ArticleResponseDto> {
+    const article = await this.articleRepository.getArticleById(
+      articleId,
+      userData,
+    );
     if (!article) {
       throw new UnprocessableEntityException();
     }
@@ -53,10 +61,10 @@ export class ArticleService {
 
   public async editArticleById(
     articleId: string,
+    userData: IUserData,
     dto: EditArticleRequestDto,
-    dataUser: IUserData,
   ): Promise<ArticleResponseDto> {
-    const article = await this.findMyOneByIdOrThrow(articleId, dataUser.userId);
+    const article = await this.findMyOneByIdOrThrow(articleId, userData.userId);
     const newArticle = await this.articleRepository.save({
       ...article,
       ...dto,
@@ -66,11 +74,45 @@ export class ArticleService {
 
   public async deleteArticleById(
     articleId: string,
-    dataUser: IUserData,
+    userData: IUserData,
   ): Promise<void> {
-    const article = await this.findMyOneByIdOrThrow(articleId, dataUser.userId);
+    const article = await this.findMyOneByIdOrThrow(articleId, userData.userId);
     await this.articleRepository.remove(article);
   }
+
+  public async like(articleId: string, userData: IUserData): Promise<void> {
+    const article = await this.articleRepository.findOneBy({ id: articleId });
+    if (article.user_id === userData.userId) {
+      throw new ForbiddenException('You cant like your article');
+    }
+    const like = await this.likeRepository.findOneBy({
+      user_id: userData.userId,
+      article_id: article.id,
+    });
+    if (like) {
+      throw new ForbiddenException('You already like this article');
+    }
+    await this.likeRepository.save(
+      this.likeRepository.create({
+        user_id: userData.userId,
+        article_id: article.id,
+      }),
+    );
+  }
+
+  public async dislike(articleId: string, userData: IUserData): Promise<void> {
+    const article = await this.articleRepository.findOneBy({ id: articleId });
+
+    const like = await this.likeRepository.findOneBy({
+      user_id: userData.userId,
+      article_id: article.id,
+    });
+    if (!like) {
+      throw new ConflictException('You cant dislike this article');
+    }
+    await this.likeRepository.remove(like);
+  }
+
   private async findMyOneByIdOrThrow(
     articleId: string,
     userId: string,

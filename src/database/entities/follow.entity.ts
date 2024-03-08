@@ -10,7 +10,7 @@ export class FollowEntity extends BaseEntity {
   follower_id: string;
   @ManyToOne(() => UserEntity, (entity) => entity.followers)
   @JoinTable({ name: 'follower_id' })
-  followers?: UserEntity;
+  follower?: UserEntity;
 
   @Column()
   following_id: string;

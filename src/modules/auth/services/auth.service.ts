@@ -54,6 +54,7 @@ export class AuthService {
       where: { email: dto.email },
       select: { id: true, password: true },
     });
+
     if (!userEntity) {
       throw new UnauthorizedException();
     }
